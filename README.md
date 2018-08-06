@@ -7,6 +7,7 @@
 初始化
 ```php
 $curl = new Curl();
+Curl::instance();
 ```
 
 发送get请求
@@ -50,6 +51,11 @@ $curl->response;            // 响应体
 $curl->response_info;       // curl_getinfo()获取到的响应信息
 $curl->response_header;     // 响应头
 $curl->response_code;       // HTTP响应的状态码
+```
+
+连贯调用
+```php
+Curl::instance()->get('http://example.com')->response;
 ```
 
 其他可用方法
