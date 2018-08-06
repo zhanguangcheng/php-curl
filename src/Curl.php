@@ -12,7 +12,7 @@
  * $curl->get(array('http://example.com/search', 'keywords' => 'grass'));
  * 
  * // post请求
- * $curl->post('http://www.example.com/login/', array(
+ * $curl->post('http://example.com/login/', array(
  *     'username' => 'admin',
  *     'password' => '123456',
  * ));
@@ -43,6 +43,7 @@ class Curl
      * @var resource
      */
     public $curl = null;
+    private static $instance = null;
     /**
      * 错误码
      * @see https://curl.haxx.se/libcurl/c/libcurl-errors.html
@@ -51,7 +52,7 @@ class Curl
     public $error_code = 0;
     public $error_message = '';
     public $verify_ssl = false;
-
+    
     /**
      * request 相关
      */
@@ -75,17 +76,20 @@ class Curl
         }
         $this->init();
     }
-
+    
     public function __destruct()
     {
         $this->close();
     }
-
+    
     public static function instance()
     {
-        return new static();
+        if (!static::$instance) {
+            static::$instance = new static();
+        }
+        return static::$instance;
     }
-
+    
     public function init()
     {
         $this->curl = curl_init();
@@ -112,7 +116,7 @@ class Curl
     {
         return $this->request($url, 'POST', $data);
     }
-
+    
     public function put($url, $data = array())
     {
         return $this->request($url, 'PUT', $data);
@@ -122,7 +126,7 @@ class Curl
     {
         return $this->request($url, 'PATCH', $data);
     }
-
+    
     public function delete($url, $data = array())
     {
         return $this->request($url, 'DELETE', $data);
@@ -163,27 +167,36 @@ class Curl
         $this->request_header = array_filter(explode("\r\n", curl_getinfo($this->curl, CURLINFO_HEADER_OUT)));
         return $this;
     }
-
+    
     public function setOpt($option, $value)
     {
         curl_setopt($this->curl, $option, $value);
         return $this;
     }
     
+    /**
+     * 设置请求头
+     * 
+     * ```php
+     * $curl->setHeader('X-Requested-With', 'XMLHttpRequest');
+     * ```
+     * @param string $key
+     * @param string $value
+     */
     public function setHeader($key, $value)
     {
         $this->request_header[$key] = $key.': '.$value;
         $this->setOpt(CURLOPT_HTTPHEADER, array_values($this->request_header));
         return $this;
     }
-
+    
     public function setCookie($key, $value)
     {
         $this->request_cookie[$key] = $value;
         $this->setOpt(CURLOPT_COOKIE, http_build_query($this->request_cookie, '', '; '));
         return $this;
     }
-
+    
     public function close()
     {
         if (is_resource($this->curl)) {
@@ -195,7 +208,7 @@ class Curl
     /**
      * 编译url
      * @param  string|array $url url字符串，或者数组形式：[url, 'param1'=>'value'...]
-     * @return string 处理好的urk
+     * @return string 处理好的url
      */
     public function buildUrl($url)
     {
