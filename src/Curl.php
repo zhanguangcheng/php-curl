@@ -17,6 +17,13 @@
  *     'password' => '123456',
  * ));
  * 
+ * // 文件下载
+ * $curl->download('http://example.com/file.zip', '/path/to/file.zip');
+ * 
+ * // 文件上传
+ * $curl->addUploadFile('name', '/path/to/file.zip');
+ * $curl->post('http://example.com/upload.php');
+ * 
  * // 其他请求
  * $curl->put('http://api.example.com/user/', array(
  *     'name' => 'Grass',
@@ -29,6 +36,7 @@
  * $curl->request_header;
  * $curl->request_body;
  * $curl->request_cookie;
+ * $curl->upload_file;
  * $curl->response;
  * $curl->response_info;
  * $curl->response_header;
@@ -44,6 +52,7 @@ class Curl
      */
     public $curl = null;
     private static $instance = null;
+
     /**
      * 错误码
      * @see https://curl.haxx.se/libcurl/c/libcurl-errors.html
@@ -60,6 +69,7 @@ class Curl
     public $request_header = array();
     public $request_body = array();
     public $request_cookie = array();
+    public $upload_file = array();
     
     /**
      * response 相关
@@ -68,7 +78,7 @@ class Curl
     public $response_info = array();
     public $response_header = array();
     public $response_code = 0;
-    
+
     public function __construct()
     {
         if (!extension_loaded('curl')) {
@@ -137,6 +147,27 @@ class Curl
         return $this->request($url, 'OPTIONS', $data);
     }
     
+    public function download($url, $save_file)
+    {
+        $fp = fopen($save_file, 'w');
+        $this->setOpt(CURLOPT_FILE, $fp);
+        $this->get($url);
+        $this->close();
+        fclose($fp);
+        return $this->response === true;
+    }
+    
+    public function addUploadFile($field, $upload_file)
+    {
+        if (class_exists('CURLFile')) {
+            $this->setOpt(CURLOPT_SAFE_UPLOAD, true);
+            $this->upload_file[$field] = new \CURLFile($upload_file);
+        } else {
+            $this->upload_file[$field] = "@$upload_file";
+        }
+        return $this;
+    }
+    
     public function request($url, $method = 'GET', $data = array())
     {
         $method = strtoupper($method);
@@ -144,11 +175,17 @@ class Curl
             $this->setOpt(CURLOPT_HTTPGET, true);
         } elseif ($method === 'POST') {
             $this->setOpt(CURLOPT_POST, true);
-            $this->setOpt(CURLOPT_POSTFIELDS, $this->prepareData($data));
+            if ($this->upload_file) {
+                $data = array_merge($this->upload_file, $data);
+                $this->setOpt(CURLOPT_POSTFIELDS, $data);
+            } else {
+                $this->setOpt(CURLOPT_POSTFIELDS, $this->prepareData($data));
+            }
         } else {
             $this->setOpt(CURLOPT_CUSTOMREQUEST, $method);
             $this->setOpt(CURLOPT_POSTFIELDS, $this->prepareData($data));
         }
+        
         $this->request_url = $this->buildUrl($url);
         $this->request_body = $data;
         $this->setOpt(CURLOPT_URL, $this->request_url);
@@ -194,6 +231,12 @@ class Curl
     {
         $this->request_cookie[$key] = $value;
         $this->setOpt(CURLOPT_COOKIE, http_build_query($this->request_cookie, '', '; '));
+        return $this;
+    }
+
+    public function setAjax()
+    {
+        $this->setHeader('X-Requested-With', 'XMLHttpRequest');
         return $this;
     }
     

@@ -26,6 +26,18 @@ $curl->post('http://example.com/login/', array(
 ));
 ```
 
+文件下载
+```php
+$curl->download('http://example.com/file.zip', '/path/to/file.zip');
+```
+
+文件上传
+```php
+$curl->addUploadFile('name', '/path/to/file.zip');
+$curl->addUploadFile('img', '/path/to/demo.jpg');
+$curl->post('http://example.com/upload.php');
+```
+
 发送其他请求
 ```php
 $curl->put('http://api.example.com/user/', array(
@@ -47,6 +59,7 @@ $curl->request_url;         // 请求的url
 $curl->request_header;      // 发送的请求头
 $curl->request_body;        // 发送的请求体
 $curl->request_cookie;      // 发送的cookie
+$curl->upload_file;         // 上传的文件
 $curl->response;            // 响应体
 $curl->response_info;       // curl_getinfo()获取到的响应信息
 $curl->response_header;     // 响应头
@@ -63,4 +76,5 @@ Curl::instance()->get('http://example.com')->response;
 $curl->setOpt();
 $curl->setHeader();
 $curl->setCookie();
+$curl->setAjax();
 ```
