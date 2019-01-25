@@ -2,6 +2,7 @@
 
 /**
  * 面向对象风格的Curl操作库
+ * https://github.com/zhanguangcheng/php-curl
  * 
  * ```php
  * // 初始化
