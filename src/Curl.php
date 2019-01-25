@@ -42,6 +42,17 @@
  * $curl->response_header;
  * $curl->response_code;
  * 
+ * // 连贯调用
+ * Curl::instance()->asJson()->get('http://example.com')->response;
+ * 
+ * // 多线程请求
+ * $curl1 = new Curl();
+ * $curl2 = new Curl();
+ * $curls = Curl::multiExec(array(
+ *     $curl1->multi()->get('http://api.example.com'),
+ *     $curl2->multi()->post('http://api.example.com'),
+ * ));
+ * 
  * ```
  */
 class Curl
@@ -51,6 +62,8 @@ class Curl
      * @var resource
      */
     public $curl = null;
+    public $multi = false;
+    public $as_json = array();
     private static $instance = null;
 
     /**
@@ -168,6 +181,24 @@ class Curl
         return $this;
     }
     
+    public function multi()
+    {
+        $this->multi = true;
+        return $this;
+    }
+    
+    public function asText()
+    {
+        $this->as_json = array();
+        return $this;
+    }
+    
+    public function asJson($assoc = false, $depth = 512)
+    {
+        $this->as_json = array($assoc, $depth);
+        return $this;
+    }
+    
     public function request($url, $method = 'GET', $data = array())
     {
         $method = strtoupper($method);
@@ -189,14 +220,42 @@ class Curl
         $this->request_url = $this->buildUrl($url);
         $this->request_body = $data;
         $this->setOpt(CURLOPT_URL, $this->request_url);
-        $this->exec();
+        if (!$this->multi) {
+            $this->exec();
+        }
         return $this;
+    }
+    
+    public static function multiExec($instancees)
+    {
+        $mh = curl_multi_init();
+        foreach ($instancees as $instance) {
+            curl_multi_add_handle($mh, $instance->curl);
+            $instance->response_header = array();
+        }
+        $running = null;
+        do {
+            if (curl_multi_select($mh) == -1) {
+                usleep(1000);
+            }
+            curl_multi_exec($mh, $running);
+        } while($running > 0);
+        foreach ($instancees as $instance) {
+            $instance->response = $instance->toJson(curl_multi_getcontent($instance->curl));
+            $instance->exec();
+            curl_multi_remove_handle($mh, $instance->curl);
+            $instance->close();
+        }
+        curl_multi_close($mh);
+        return $instancees;
     }
     
     public function exec()
     {
-        $this->response_header = array();
-        $this->response = curl_exec($this->curl);
+        if (!$this->multi) {
+            $this->response_header = array();
+            $this->response = $this->toJson(curl_exec($this->curl));
+        }
         $this->error_code = curl_errno($this->curl);
         $this->error_message = curl_error($this->curl);
         $this->response_info = curl_getinfo($this->curl);
@@ -246,6 +305,14 @@ class Curl
             curl_close($this->curl);
         }
         return $this;
+    }
+    
+    public function toJson($data)
+    {
+        if ($this->as_json) {
+            return json_decode($data, $this->as_json[0], $this->as_json[1]);
+        }
+        return $data;
     }
     
     /**

@@ -1,6 +1,6 @@
 # curl
 
-面向对象风格的Curl操作库
+面向对象风格的Curl操作库，版本要求：PHP >= 5.3
 
 ## 使用示例
 
@@ -38,6 +38,11 @@ $curl->addUploadFile('img', '/path/to/demo.jpg');
 $curl->post('http://example.com/upload.php');
 ```
 
+转换结果为json格式
+```php
+$curl->asJson()->get('http://example.com');
+```
+
 发送其他请求
 ```php
 $curl->put('http://api.example.com/user/', array(
@@ -68,7 +73,17 @@ $curl->response_code;       // HTTP响应的状态码
 
 连贯调用
 ```php
-Curl::instance()->get('http://example.com')->response;
+Curl::instance()->asJson()->get('http://example.com')->response;
+```
+
+多线程请求
+```php
+$curl1 = new Curl();
+$curl2 = new Curl();
+$curls = Curl::multiExec(array(
+    $curl1->multi()->get('http://api.example.com'),
+    $curl2->multi()->post('http://api.example.com'),
+));
 ```
 
 其他可用方法
@@ -77,4 +92,7 @@ $curl->setOpt();
 $curl->setHeader();
 $curl->setCookie();
 $curl->setAjax();
+$curl->multi();
+$curl->asText();
+$curl->asJson();
 ```
