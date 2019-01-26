@@ -65,6 +65,7 @@ class Curl
     public $curl = null;
     public $multi = false;
     public $as_json = array();
+    private $default_user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36';
     private static $instance = null;
 
     /**
@@ -128,6 +129,7 @@ class Curl
             $this->setOpt(CURLOPT_SSL_VERIFYHOST, 0);
         }
         $this->setOpt(CURLOPT_HEADERFUNCTION, array($this, 'addResponseHeader'));
+        $this->setUserAgent($this->default_user_agent);
         return $this;
     }
     
@@ -297,6 +299,12 @@ class Curl
     public function setAjax()
     {
         $this->setHeader('X-Requested-With', 'XMLHttpRequest');
+        return $this;
+    }
+    
+    public function setUserAgent($value)
+    {
+        $this->setOpt(CURLOPT_USERAGENT, $value);
         return $this;
     }
     
