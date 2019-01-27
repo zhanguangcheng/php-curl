@@ -95,4 +95,5 @@ $curl->setAjax();
 $curl->multi();
 $curl->asText();
 $curl->asJson();
+$curl->reset();
 ```

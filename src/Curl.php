@@ -99,6 +99,7 @@ class Curl
         if (!extension_loaded('curl')) {
             throw new \ErrorException('cURL扩展尚未安装');
         }
+        $this->curl = curl_init();
         $this->init();
     }
     
@@ -117,7 +118,6 @@ class Curl
     
     public function init()
     {
-        $this->curl = curl_init();
         $this->setOpt(CURLOPT_RETURNTRANSFER, true);
         $this->setOpt(CURLINFO_HEADER_OUT, true);
         $this->setOpt(CURLOPT_TIMEOUT, 10);
@@ -168,7 +168,6 @@ class Curl
         $fp = fopen($save_file, 'w');
         $this->setOpt(CURLOPT_FILE, $fp);
         $this->get($url);
-        $this->close();
         fclose($fp);
         return $this->response === true;
     }
@@ -264,6 +263,27 @@ class Curl
         $this->response_info = curl_getinfo($this->curl);
         $this->response_code = curl_getinfo($this->curl, CURLINFO_HTTP_CODE);
         $this->request_header = array_filter(explode("\r\n", curl_getinfo($this->curl, CURLINFO_HEADER_OUT)));
+        return $this;
+    }
+    
+    public function reset()
+    {
+        $this->request_url = null;
+        $this->request_header = array();
+        $this->request_body = array();
+        $this->request_cookie = array();
+        $this->upload_file = array();
+        $this->response = null;
+        $this->response_info = array();
+        $this->response_header = array();
+        $this->response_code = 0;
+        $this->multi = false;
+        $this->as_json = array();
+        $this->error_code = 0;
+        $this->error_message = '';
+        $this->verify_ssl = false;
+        curl_reset($this->curl);
+        $this->init();
         return $this;
     }
     
