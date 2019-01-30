@@ -2,7 +2,7 @@
 
 require __DIR__ . '/../src/Curl.php';
 
-class CurlTest extends PHPunit\Framework\TestCase
+class CurlTest extends PHPUnit\Framework\TestCase
 {
     public function testBuildUrl()
     {
