@@ -246,7 +246,6 @@ class Curl
             $instance->response = $instance->toJson(curl_multi_getcontent($instance->curl));
             $instance->exec();
             curl_multi_remove_handle($mh, $instance->curl);
-            $instance->close();
         }
         curl_multi_close($mh);
         return $instancees;
