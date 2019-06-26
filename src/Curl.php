@@ -49,10 +49,13 @@
  * // 多线程请求
  * $curl1 = new Curl();
  * $curl2 = new Curl();
- * $curls = Curl::multiExec(array(
+ * Curl::multiExec(array(
  *     $curl1->multi()->get('http://api.example.com'),
  *     $curl2->multi()->post('http://api.example.com'),
  * ));
+ * Curl::multiClose();
+ * echo $curl1->response;
+ * echo $curl2->response;
  * 
  * ```
  */
@@ -67,6 +70,7 @@ class Curl
     public $as_json = array();
     private $default_user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36';
     private static $instance = null;
+    private static $multi_curl = null;
 
     /**
      * 错误码
@@ -230,7 +234,10 @@ class Curl
     
     public static function multiExec($instancees)
     {
-        $mh = curl_multi_init();
+        if (is_null(static::$multi_curl)) {
+            static::$multi_curl = curl_multi_init();
+        }
+        $mh = static::$multi_curl;
         foreach ($instancees as $instance) {
             curl_multi_add_handle($mh, $instance->curl);
             $instance->response_header = array();
@@ -247,10 +254,16 @@ class Curl
             $instance->exec();
             curl_multi_remove_handle($mh, $instance->curl);
         }
-        curl_multi_close($mh);
         return $instancees;
     }
     
+    public static function multiClose()
+    {
+        if (is_resource(static::$multi_curl)) {
+            curl_multi_close(static::$multi_curl);
+        }
+    }
+
     public function exec()
     {
         if (!$this->multi) {

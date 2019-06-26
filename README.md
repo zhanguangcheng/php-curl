@@ -80,10 +80,13 @@ Curl::instance()->asJson()->get('http://example.com')->response;
 ```php
 $curl1 = new Curl();
 $curl2 = new Curl();
-$curls = Curl::multiExec(array(
+Curl::multiExec(array(
     $curl1->multi()->get('http://api.example.com'),
     $curl2->multi()->post('http://api.example.com'),
 ));
+Curl::multiClose();
+echo $curl1->response;
+echo $curl2->response;
 ```
 
 其他可用方法
