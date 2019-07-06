@@ -100,3 +100,36 @@ $curl->asText();
 $curl->asJson();
 $curl->reset();
 ```
+
+
+## 批量请求示例
+
+```php
+$thread_num = 20;
+$urls = array_fill(0, 100, 'https://example.com');
+
+$url_chunks = array_chunk($urls, $thread_num);
+$curls = array();
+for ($i=0; $i < $thread_num; $i++) { 
+    $curls[] = new Curl();
+}
+foreach ($url_chunks as $chunks) {
+    $requests = array();
+    foreach ($chunks as $i => $url) {
+        $requests[] = $curls[$i]->reset()->multi()->get($url);
+    }
+    Curl::multiExec($requests);
+    foreach ($requests as $i => $curl) {
+        echo $curl->response_code, ' ';
+    }
+}
+Curl::multiClose();
+```
+
+
+## 执行测试
+
+```bash
+composer install
+phpunit
+```
