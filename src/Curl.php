@@ -89,6 +89,7 @@ class Curl
     public $request_body = array();
     public $request_cookie = array();
     public $upload_file = array();
+    public $request_content_type = 'application/x-www-form-urlencoded';
     
     /**
      * response 相关
@@ -134,6 +135,7 @@ class Curl
         }
         $this->setOpt(CURLOPT_HEADERFUNCTION, array($this, 'addResponseHeader'));
         $this->setUserAgent($this->default_user_agent);
+        $this->setContentTypeUrlencoded();
         return $this;
     }
     
@@ -213,11 +215,10 @@ class Curl
         } elseif ($method === 'POST') {
             $this->setOpt(CURLOPT_POST, true);
             if ($this->upload_file) {
+                $this->setContentTypeFormData();
                 $data = array_merge($this->upload_file, $data);
-                $this->setOpt(CURLOPT_POSTFIELDS, $data);
-            } else {
-                $this->setOpt(CURLOPT_POSTFIELDS, $this->prepareData($data));
             }
+            $this->setOpt(CURLOPT_POSTFIELDS, $this->prepareData($data));
         } else {
             $this->setOpt(CURLOPT_CUSTOMREQUEST, $method);
             $this->setOpt(CURLOPT_POSTFIELDS, $this->prepareData($data));
@@ -321,6 +322,30 @@ class Curl
         return $this;
     }
     
+    public function setContentTypeUrlencoded()
+    {
+        $this->request_content_type = 'application/x-www-form-urlencoded';
+        return $this->setHeader('Content-Type', $this->request_content_type);
+    }
+    
+    public function setContentTypeFormData()
+    {
+        $this->request_content_type = 'multipart/form-data';
+        return $this->setHeader('Content-Type', $this->request_content_type);
+    }
+    
+    public function setContentTypeJson()
+    {
+        $this->request_content_type = 'application/json';
+        return $this->setHeader('Content-Type', $this->request_content_type);
+    }
+    
+    public function setContentTypeXml()
+    {
+        $this->request_content_type = 'application/xml';
+        return $this->setHeader('Content-Type', $this->request_content_type);
+    }
+    
     public function setCookie($key, $value)
     {
         $this->request_cookie[$key] = $value;
@@ -378,7 +403,13 @@ class Curl
     public function prepareData($data)
     {
         if (is_array($data) || is_object($data)) {
-            return http_build_query($data);
+            switch ($this->request_content_type) {
+                case 'application/x-www-form-urlencoded': return http_build_query($data);
+                case 'application/json': return json_encode($data);
+                case 'multipart/form-data': return $data;
+                default:
+                    throw new \InvalidArgumentException("数据错误或者Content Type 错误：$this->request_content_type");
+            }
         }
         return $data;
     }

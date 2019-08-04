@@ -105,6 +105,35 @@ class CurlTest extends PHPUnit\Framework\TestCase
         $this->assertEquals('curl', $curl->response['headers']['User-Agent']);
     }
     
+    public function testSetContentTypeUrlencoded()
+    {
+        $curl = Curl::instance()->reset()->asJson(true)->setContentTypeUrlencoded()->post($this->getUrl('post'));
+        $this->assertEquals('application/x-www-form-urlencoded', $curl->response['headers']['Content-Type']);
+    }
+    
+    public function testSetContentTypeFormData()
+    {
+        $curl = Curl::instance()->reset()->asJson(true)->setContentTypeFormData()->post($this->getUrl('post'));
+        $this->assertStringStartsWith('multipart/form-data', $curl->response['headers']['Content-Type']);
+    }
+    
+    public function testSetContentTypeJson()
+    {
+        $curl = Curl::instance()->reset()->asJson(true)->setContentTypeJson()->post($this->getUrl('post'));
+        $this->assertEquals('application/json', $curl->response['headers']['Content-Type']);
+    }
+    
+    public function testSetContentTypeXml()
+    {
+        $curl = Curl::instance()->reset()->asJson(true)->setContentTypeXml()->post($this->getUrl('post'), '<xml>');
+        $this->assertEquals('application/xml', $curl->response['headers']['Content-Type']);
+    }
+    
+    public function testClose()
+    {
+        $this->assertEquals(false, is_resource(Curl::instance()->close()->curl));
+    }
+    
     public function getUrl($path)
     {
         return "http://httpbin.org/$path";

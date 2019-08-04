@@ -26,6 +26,14 @@ $curl->post('http://example.com/login/', array(
 ));
 ```
 
+发送json数据
+```php
+$curl->setContentTypeJson()->post('http://example.com/login/', array(
+    'username' => 'admin',
+    'password' => '123456',
+));
+```
+
 文件下载
 ```php
 $curl->download('http://example.com/file.zip', '/path/to/file.zip');
@@ -52,7 +60,7 @@ $curl->put();
 $curl->patch();
 $curl->delete();
 $curl->options();
-$curl->request($url, 'HEAD');
+$curl->request($url, 'HEAD'); // 自定义请求
 ```
 
 获取结果
