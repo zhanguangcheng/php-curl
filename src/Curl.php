@@ -95,6 +95,7 @@ class Curl
      * response 相关
      */
     public $response = null;
+    public $response_origin = null;
     public $response_info = array();
     public $response_header = array();
     public $response_code = 0;
@@ -269,7 +270,8 @@ class Curl
     {
         if (!$this->multi) {
             $this->response_header = array();
-            $this->response = $this->toJson(curl_exec($this->curl));
+            $this->response_origin = curl_exec($this->curl);
+            $this->response = $this->toJson($this->response_origin);
         }
         $this->error_code = curl_errno($this->curl);
         $this->error_message = curl_error($this->curl);
@@ -287,6 +289,7 @@ class Curl
         $this->request_cookie = array();
         $this->upload_file = array();
         $this->response = null;
+        $this->response_origin = null;
         $this->response_info = array();
         $this->response_header = array();
         $this->response_code = 0;
