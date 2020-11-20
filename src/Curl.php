@@ -252,7 +252,8 @@ class Curl
             curl_multi_exec($mh, $running);
         } while($running > 0);
         foreach ($instancees as $instance) {
-            $instance->response = $instance->toJson(curl_multi_getcontent($instance->curl));
+            $instance->response_origin = curl_multi_getcontent($instance->curl);
+            $instance->response = $instance->toJson($instance->response_origin);
             $instance->exec();
             curl_multi_remove_handle($mh, $instance->curl);
         }
