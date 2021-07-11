@@ -107,6 +107,12 @@ $curl->multi();
 $curl->asText();
 $curl->asJson();
 $curl->reset();
+$curl->setContentTypeUrlencoded();
+$curl->setContentTypeFormData();
+$curl->setContentTypeJson();
+$curl->setContentTypeXml();
+$curl->setDownloadFile();
+$curl->setProgressCallback();
 ```
 
 

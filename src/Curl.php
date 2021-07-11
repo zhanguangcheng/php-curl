@@ -66,6 +66,7 @@ class Curl
      * @var resource
      */
     public $curl = null;
+    public $fp = null;
     public $multi = false;
     public $as_json = array();
     private $default_user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36';
@@ -172,13 +173,22 @@ class Curl
     
     public function download($url, $save_file)
     {
-        $fp = fopen($save_file, 'w');
-        $this->setOpt(CURLOPT_FILE, $fp);
-        $this->get($url);
-        fclose($fp);
+        $this->setDownloadFile($save_file)->get($url);
         return $this->response === true;
     }
+
+    public function setDownloadFile($save_file)
+    {
+        $this->fp = fopen($save_file, 'w');
+        $this->setOpt(CURLOPT_FILE, $this->fp);
+        return $this;
+    }
     
+    public function setProgressCallback($callback)
+    {
+        return $this->setOpt(CURLOPT_NOPROGRESS, false)->setOpt(CURLOPT_PROGRESSFUNCTION, $callback);
+    }
+
     public function addUploadFile($field, $upload_file)
     {
         if (class_exists('CURLFile')) {
@@ -279,6 +289,9 @@ class Curl
         $this->response_info = curl_getinfo($this->curl);
         $this->response_code = curl_getinfo($this->curl, CURLINFO_HTTP_CODE);
         $this->request_header = array_filter(explode("\r\n", curl_getinfo($this->curl, CURLINFO_HEADER_OUT)));
+        if (is_resource($this->fp)) {
+            fclose($this->fp);
+        }
         return $this;
     }
     
@@ -373,6 +386,9 @@ class Curl
     {
         if (is_resource($this->curl)) {
             curl_close($this->curl);
+        }
+        if (is_resource($this->fp)) {
+            curl_close($this->fp);
         }
         return $this;
     }
