@@ -181,6 +181,7 @@ class Curl
     {
         $this->fp = fopen($save_file, 'w');
         $this->setOpt(CURLOPT_FILE, $this->fp);
+        $this->setOpt(CURLOPT_TIMEOUT, -1);
         return $this;
     }
     
@@ -197,6 +198,7 @@ class Curl
         } else {
             $this->upload_file[$field] = "@$upload_file";
         }
+        $this->setOpt(CURLOPT_TIMEOUT, -1);
         return $this;
     }
     
