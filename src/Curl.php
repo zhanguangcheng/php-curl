@@ -390,7 +390,7 @@ class Curl
             curl_close($this->curl);
         }
         if (is_resource($this->fp)) {
-            curl_close($this->fp);
+            fclose($this->fp);
         }
         return $this;
     }
